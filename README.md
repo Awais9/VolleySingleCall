@@ -31,6 +31,40 @@ Please check the example in the project which have following funtions.
       setLogoutCount()
       isShowDialog()
       VolleyQueue.setHeaders()
+      
+Just call the service from network controller as below:
 
-Check the example to understand their functionality.
+      private fun callService() {
+        var serviceName = baseURL + "login"
+        val networkController = NetworkController(this)
+        networkController.isShowLoadingDialog = true
+        val hashMap = HashMap<String, String>()
+        hashMap["email"] = "username"
+        hashMap["password"] = "password"
+        networkController.isFinishActivity = true
+        networkController.callService(Request.Method.POST, serviceName, hashMap, testAPI,
+                JSONObject::class.java, object : VolleyResponse {
+            override fun onFailure(message: String) {
+
+            }
+
+            override fun onSuccess(response: Any, tag: String) {
+                Log.e("Test", tag)
+            }
+        })
+    }
+    
+If you want to handle logout functionality then add eventbus in your app gradle as dependency and add the following method in your calling activity 
+
+    @Subscribe
+    fun logout(model: LogoutModel) {
+        /*Clear all data in session*/
+        val pm = packageManager
+        val intent = pm.getLaunchIntentForPackage(packageName)
+        intent!!.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(intent)
+        finish()
+    }
+
+Check the example to understand all the functionality.
 
