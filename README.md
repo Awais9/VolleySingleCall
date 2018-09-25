@@ -32,5 +32,5 @@ Please check the example in the project which have following funtions.
       isShowDialog()
       VolleyQueue.setHeaders()
 
-Check the example to understand thier functionality.
+Check the example to understand their functionality.
 
