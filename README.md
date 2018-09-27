@@ -42,7 +42,7 @@ Just call the service from network controller as below:
         hashMap["email"] = "username"
         hashMap["password"] = "password"
         networkController.isFinishActivity = true
-        networkController.callService(Request.Method.POST, serviceName, hashMap, testAPI,
+        networkController.callService(NetworkConst.POST, serviceName, hashMap, testAPI,
                 JSONObject::class.java, object : VolleyResponse {
             override fun onFailure(message: String) {
 
