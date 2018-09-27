@@ -4,8 +4,8 @@ import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import com.android.volley.Request
 import com.awais.volleysinglecall.LogoutModel
+import com.awais.volleysinglecall.NetworkConst
 import com.awais.volleysinglecall.NetworkController
 import com.company.volleysinglecall.network.VolleyResponse
 import org.greenrobot.eventbus.EventBus
@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         hashMap["email"] = "username"
         hashMap["password"] = "password"
         networkController.isFinishActivity = true
-        networkController.callService(Request.Method.POST, serviceName, hashMap, testAPI,
+        networkController.callService(NetworkConst.POST, serviceName, hashMap, testAPI,
                 JSONObject::class.java, object : VolleyResponse {
             override fun onFailure(message: String) {
 
