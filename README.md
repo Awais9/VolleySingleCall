@@ -19,7 +19,7 @@ Add the following in your main project gradle file
 And add the following in app gradle file
 
      dependencies {
-              implementation 'com.github.Awais9:VolleySingleCall:v1.0'
+              implementation 'com.github.Awais9:VolleySingleCall:v1.0.1'
       }
 
 # How to use?
