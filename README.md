@@ -19,7 +19,7 @@ Add the following in your main project gradle file
 And add the following in app gradle file
 
      dependencies {
-              implementation 'com.github.Awais9:VolleySingleCall:v1.0.1'
+              implementation 'com.github.Awais9:VolleySingleCall:v1.2'
       }
 
 # How to use?
@@ -30,6 +30,7 @@ Please check the example in the project which have following funtions.
       isShowLoadingDialog()
       setLogoutCount()
       isShowDialog()
+      getLoadingDialog()
       VolleyQueue.setHeaders()
       
 Just call the service from network controller as below:
