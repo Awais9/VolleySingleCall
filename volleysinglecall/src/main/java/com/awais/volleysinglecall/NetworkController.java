@@ -34,15 +34,10 @@ public class NetworkController {
     private boolean finishActivity = false;
     private boolean shouldLogout = false;
     private boolean showLoadingDialog = false;
-    private LoadingDialog loadingDialog;
     private boolean showDialog = true;
 
     public LoadingDialog getLoadingDialog() {
-        return loadingDialog;
-    }
-
-    public void setLoadingDialog(LoadingDialog loadingDialog) {
-        this.loadingDialog = loadingDialog;
+        return LoadingDialog.getInstance(context);
     }
 
     public boolean isFinishActivity() {
@@ -91,8 +86,7 @@ public class NetworkController {
                                 final String tag, final Class<T> objectClass,
                                 final VolleyResponse calls) {
         if (isShowLoadingDialog()) {
-            loadingDialog = LoadingDialog.getInstance(context);
-            loadingDialog.showDialog();
+            getLoadingDialog().showDialog();
         }
         final VolleyQueue volleyQueue = VolleyQueue.getInstance(context);
         StringRequest request = new StringRequest(requestType,
@@ -101,7 +95,7 @@ public class NetworkController {
             public void onResponse(String response) {
                 currentCount = 0;
                 if (isShowLoadingDialog()) {
-                    loadingDialog.hideDialog();
+                    getLoadingDialog().hideDialog();
                 }
                 try {
                     JSONObject jsonObject = new JSONObject(response);
@@ -130,7 +124,7 @@ public class NetworkController {
             @Override
             public void onErrorResponse(VolleyError error) {
                 if (isShowLoadingDialog()) {
-                    loadingDialog.hideDialog();
+                    getLoadingDialog().hideDialog();
                 }
                 if (isShouldLogout()) {
                     if (currentCount < getLogoutCount()) {
