@@ -37,6 +37,14 @@ public class NetworkController {
     private LoadingDialog loadingDialog;
     private boolean showDialog = true;
 
+    public LoadingDialog getLoadingDialog() {
+        return loadingDialog;
+    }
+
+    public void setLoadingDialog(LoadingDialog loadingDialog) {
+        this.loadingDialog = loadingDialog;
+    }
+
     public boolean isFinishActivity() {
         return finishActivity;
     }
