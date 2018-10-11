@@ -1,5 +1,5 @@
 apply plugin: 'com.github.dcendents.android-maven'
-group='com.github.Awais9.gifloadingdialog'
+group = 'com.github.Awais9.gifloadingdialog'
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
@@ -30,6 +30,6 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.android.volley:volley:1.1.0'
     implementation 'com.google.code.gson:gson:2.8.2'
-    implementation 'com.github.Awais9:gifloadingdialog:v1.0.1'
+    implementation 'com.github.Awais9:gifloadingdialog:v1.2.2'
     implementation 'org.greenrobot:eventbus:3.1.1'
 }
