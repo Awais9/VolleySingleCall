@@ -26,7 +26,6 @@ class MainActivity : AppCompatActivity() {
     private fun callService() {
         var serviceName = baseURL + "login"
         val networkController = NetworkController(this)
-        networkController.isShowLoadingDialog = true
         val hashMap = HashMap<String, String>()
         hashMap["email"] = "username"
         hashMap["password"] = "password"

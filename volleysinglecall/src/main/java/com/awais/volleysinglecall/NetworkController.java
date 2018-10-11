@@ -9,7 +9,6 @@ import android.util.Log;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.awais.gifloadingdialog.LoadingDialog;
 import com.company.volleysinglecall.network.VolleyResponse;
 import com.google.gson.Gson;
 
@@ -33,12 +32,7 @@ public class NetworkController {
     private int currentCount = 0;
     private boolean finishActivity = false;
     private boolean shouldLogout = false;
-    private boolean showLoadingDialog = false;
     private boolean showDialog = true;
-
-    public LoadingDialog getLoadingDialog() {
-        return LoadingDialog.getInstance(context);
-    }
 
     public boolean isFinishActivity() {
         return finishActivity;
@@ -54,14 +48,6 @@ public class NetworkController {
 
     public void setShouldLogout(boolean shouldLogout) {
         this.shouldLogout = shouldLogout;
-    }
-
-    public boolean isShowLoadingDialog() {
-        return showLoadingDialog;
-    }
-
-    public void setShowLoadingDialog(boolean showLoadingDialog) {
-        this.showLoadingDialog = showLoadingDialog;
     }
 
     public int getLogoutCount() {
@@ -85,18 +71,12 @@ public class NetworkController {
     public <T> void callService(int requestType, String serviceName, final HashMap<String, String> hashMap,
                                 final String tag, final Class<T> objectClass,
                                 final VolleyResponse calls) {
-        if (isShowLoadingDialog()) {
-            getLoadingDialog().showDialog();
-        }
         final VolleyQueue volleyQueue = VolleyQueue.getInstance(context);
         StringRequest request = new StringRequest(requestType,
                 serviceName, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 currentCount = 0;
-                if (isShowLoadingDialog()) {
-                    getLoadingDialog().hideDialog();
-                }
                 try {
                     JSONObject jsonObject = new JSONObject(response);
                     if (jsonObject.getInt("status") == 1) {
@@ -123,9 +103,6 @@ public class NetworkController {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                if (isShowLoadingDialog()) {
-                    getLoadingDialog().hideDialog();
-                }
                 if (isShouldLogout()) {
                     if (currentCount < getLogoutCount()) {
                         currentCount++;
