@@ -4,10 +4,6 @@ A custom volley library to handle all the network calls in single request except
 # Add dependency?
 
 Add the following in your main project gradle file
-
-      dependencies {
-          classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
-      }
       
       allprojects {
           repositories {
@@ -19,7 +15,7 @@ Add the following in your main project gradle file
 And add the following in app gradle file
 
      dependencies {
-              implementation 'com.github.Awais9:VolleySingleCall:v1.2'
+              implementation 'com.github.Awais9:VolleySingleCall:v1.2.2'
       }
 
 # How to use?
@@ -27,10 +23,8 @@ Please check the example in the project which have following funtions.
 
       isFinishActivity()
       isShouldLogout()
-      isShowLoadingDialog()
       setLogoutCount()
       isShowDialog()
-      getLoadingDialog()
       VolleyQueue.setHeaders()
       
 Just call the service from network controller as below:
@@ -38,7 +32,6 @@ Just call the service from network controller as below:
       private fun callService() {
         var serviceName = baseURL + "login"
         val networkController = NetworkController(this)
-        networkController.isShowLoadingDialog = true
         val hashMap = HashMap<String, String>()
         hashMap["email"] = "username"
         hashMap["password"] = "password"
