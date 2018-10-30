@@ -15,8 +15,8 @@ import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
-    private val testAPI: String = "Test"
-    val baseURL = "http://topsunapi.arhamsoft.com/api/authentication/register"
+    private val TAG: String = "Test"
+    val baseURL = "http://"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,11 +25,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun callService() {
-//        var serviceName = baseURL /*+ "register"*/
-        var serviceName = "http://topsunapi.arhamsoft.com/api/product/1?pageNo=1&pageSize=12"
+        var serviceName = baseURL /*+ "register"*/
         val headers = HashMap<String, String>()
-        headers["TopsunAuth"] = "Basic c2FtcGxldXNlcjE6QWRtaW5AMTIz"
-//        headers["Content-Type"] = "application/json; charset=utf-8"
         val queue = VolleyQueue.getInstance(this)
         queue.headers = headers
 
@@ -42,7 +39,7 @@ class MainActivity : AppCompatActivity() {
         params.put("LastName", "Test")
 
         networkController.isFinishActivity = true
-        networkController.callService(NetworkConst.POST, baseURL, null, testAPI,
+        networkController.callService(NetworkConst.POST, serviceName, null, TAG,
                 JSONObject::class.java, object : VolleyResponse {
             override fun onSuccess(response: Any, tag: String) {
                 Log.e("onSuccess", tag)
@@ -51,7 +48,6 @@ class MainActivity : AppCompatActivity() {
             override fun onFailure(message: String) {
                 Log.e("onFailure", message)
             }
-
         }, params, true)
     }
 
