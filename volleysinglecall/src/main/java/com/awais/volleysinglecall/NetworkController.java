@@ -4,27 +4,48 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
 import android.util.Log;
 
+import com.android.volley.NetworkResponse;
 import com.android.volley.Response;
+import com.android.volley.ServerError;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.ImageRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.company.volleysinglecall.network.VolleyResponse;
 import com.google.gson.Gson;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 
 import org.greenrobot.eventbus.EventBus;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+
+import cz.msebera.android.httpclient.Header;
 
 public class NetworkController {
 
     /************* Network Controller Class Instances **************/
     private Context context;
+    private VolleyQueue volleyQueue;
 
     public NetworkController(Context ctx) {
         context = ctx;
+        volleyQueue = VolleyQueue.getInstance(context);
     }
 
     /***************************************************************/
@@ -69,68 +90,186 @@ public class NetworkController {
     /***************************************************************/
 
     public <T> void callService(int requestType, String serviceName, final HashMap<String, String> hashMap,
-                                final String tag, final Class<T> objectClass,
-                                final VolleyResponse calls) {
-        final VolleyQueue volleyQueue = VolleyQueue.getInstance(context);
-        StringRequest request = new StringRequest(requestType,
-                serviceName, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                currentCount = 0;
-                try {
-                    JSONObject jsonObject = new JSONObject(response);
-                    if (jsonObject.getInt("status") == 1) {
-                        if (objectClass.getName().equals(JSONObject.class.getName())) {
-                            calls.onSuccess(jsonObject, tag);
-                        } else if (objectClass.getName().equals(String.class.getName())) {
-                            calls.onSuccess(response, tag);
-                        } else {
-                            Gson gson = new Gson();
-                            Object typeClass = gson.fromJson(response, objectClass);
-                            calls.onSuccess(typeClass, tag);
-                        }
-                    } else {
-                        calls.onFailure(response);
-                        if (isShowDialog())
-                            showSingleDialog(jsonObject.optString("message"));
-                    }
-                } catch (Exception e) {
-                    if (isShowDialog())
-                        showSingleDialog(e.getMessage());
-                    calls.onFailure(e.getMessage());
+                                final String tag, final Class<T> objectClass, final VolleyResponse calls,
+                                JSONObject jsonObject, boolean isJsonReq) {
+
+        if (isJsonReq) {
+            JsonObjectRequest objectRequest = new JsonObjectRequest(requestType, serviceName,
+                    jsonObject, new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    requestSuccess("", response, tag, calls, objectClass);
                 }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    responseFailed(error, tag, calls);
+                }
+            }) {
+                @Override
+                public Map<String, String> getHeaders() {
+                    return volleyQueue.getHeaders();
+                }
+            };
+            volleyQueue.addToRequestQueue(objectRequest, tag);
+        } else {
+            StringRequest request = new StringRequest(requestType,
+                    serviceName, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    requestSuccess(response, null, tag, calls, objectClass);
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    responseFailed(error, tag, calls);
+                }
+            }) {
+                @Override
+                public Map<String, String> getHeaders() {
+                    return volleyQueue.getHeaders();
+                }
+
+                @Override
+                protected Map<String, String> getParams() {
+                    if (hashMap != null)
+                        return hashMap;
+                    else
+                        return new HashMap<>();
+                }
+            };
+            volleyQueue.addToRequestQueue(request, tag);
+        }
+    }
+
+    private <T> void requestSuccess(String response, JSONObject responseObj, String tag,
+                                    VolleyResponse calls, Class<T> objectClass) {
+        currentCount = 0;
+        try {
+            JSONObject jsonObject;
+            if (response.isEmpty()) {
+                jsonObject = responseObj;
+            } else {
+                jsonObject = new JSONObject(response);
             }
-        }, new Response.ErrorListener() {
+            if (jsonObject.getInt("status") == 1) {
+                if (objectClass.getName().equals(JSONObject.class.getName())) {
+                    calls.onSuccess(jsonObject, tag);
+                } else if (objectClass.getName().equals(String.class.getName())) {
+                    calls.onSuccess(jsonObject.toString(), tag);
+                } else {
+                    Gson gson = new Gson();
+                    Object typeClass = gson.fromJson(jsonObject.toString(), objectClass);
+                    calls.onSuccess(typeClass, tag);
+                }
+            } else {
+                calls.onFailure(jsonObject.toString());
+                if (isShowDialog())
+                    showSingleDialog(jsonObject.optString("message"));
+            }
+        } catch (Exception e) {
+            if (isShowDialog())
+                showSingleDialog(e.getMessage());
+            calls.onFailure(e.getMessage());
+        }
+    }
+
+    private void responseFailed(VolleyError error, String tag, VolleyResponse calls) {
+        NetworkResponse response = error.networkResponse;
+        if (error instanceof ServerError && response != null) {
+            try {
+                String res = new String(response.data,
+                        HttpHeaderParser.parseCharset(response.headers, "utf-8"));
+                // Now you can use any deserializer to make sense of data
+                JSONObject obj = new JSONObject(res);
+                Log.e("VolleyError", obj.toString());
+            } catch (UnsupportedEncodingException e1) {
+                // Couldn't properly decode data to string
+                e1.printStackTrace();
+            } catch (JSONException e2) {
+                // returned data is not JSONObject?
+                e2.printStackTrace();
+            }
+        }
+        if (isShouldLogout()) {
+            if (currentCount < getLogoutCount()) {
+                currentCount++;
+                if (isShowDialog())
+                    showSingleDialog(error.toString());
+                calls.onFailure(error.toString());
+            } else {
+                logoutDialog("Do you want to logout?");
+            }
+        } else {
+            if (isShowDialog())
+                showSingleDialog(error.toString());
+            calls.onFailure(error.toString());
+        }
+        volleyQueue.cancelPendingRequests(tag);
+    }
+
+    public void imageRequest(final ImageResponse imageResponse, String imageURL) {
+        ImageRequest imageRequest = new ImageRequest(imageURL, new Response.Listener<Bitmap>() {
+            @Override
+            public void onResponse(Bitmap response) {
+                imageResponse.onSuccess(response);
+            }
+        }, 0, 0, null, null, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                if (isShouldLogout()) {
-                    if (currentCount < getLogoutCount()) {
-                        currentCount++;
-                        if (isShowDialog())
-                            showSingleDialog(error.getMessage());
-                        calls.onFailure(error.getMessage());
-                    } else {
-                        logoutDialog("Do you want to logout?");
-                    }
-                } else {
-                    if (isShowDialog())
-                        showSingleDialog(error.getMessage());
-                    calls.onFailure(error.getMessage());
-                }
-                volleyQueue.cancelPendingRequests(tag);
+                imageResponse.onFailure(error.toString());
             }
-        }) {
+        });
+        volleyQueue.addToRequestQueue(imageRequest, "imageRequest");
+    }
+
+    public <T> void uploadImage(String serviceURL, JSONObject params, final String tag, final Class<T> objectClass,
+                                final VolleyResponse response) {
+
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setTimeout(200 * 10000);
+        HashMap<String, String> headers = volleyQueue.getHeaders();
+        Iterator<String> keys = headers.keySet().iterator();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            String value = headers.get(key);
+            client.addHeader(key, value);
+        }
+        RequestParams requestParams = new RequestParams();
+        try {
+            Iterator<String> iterator = params.keys();
+            while (iterator.hasNext()) {
+                String key = iterator.next();
+                String value = params.getString(key);
+                if (key.contains("image") || key.contains("picture") || key.contains("icon")) {
+                    requestParams.put(key, new File(value));
+                } else {
+                    requestParams.put(key, value);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        client.post(serviceURL, requestParams, new JsonHttpResponseHandler() {
             @Override
-            public Map<String, String> getHeaders() {
-                return volleyQueue.getHeaders();
+            public void onSuccess(int statusCode, Header[] headers, JSONObject objResponse) {
+                try {
+                    requestSuccess("", objResponse, tag, response, objectClass);
+                } catch (Exception e) {
+                    response.onFailure(e.toString());
+                }
             }
 
             @Override
-            protected Map<String, String> getParams() {
-                return hashMap;
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                response.onFailure(responseString);
             }
-        };
-        volleyQueue.addToRequestQueue(request, tag);
+
+            @Override
+            public void setRequestHeaders(Header[] requestHeaders) {
+                super.setRequestHeaders(requestHeaders);
+            }
+        });
     }
 
     private void showSingleDialog(String message) {
