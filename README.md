@@ -15,7 +15,7 @@ Add the following in your main project gradle file
 And add the following in app gradle file
 
      dependencies {
-              implementation 'com.github.Awais9:VolleySingleCall:v1.2.2'
+             implementation 'com.github.Awais9:VolleySingleCall:v1.3'
       }
 
 # How to use?
@@ -30,22 +30,30 @@ Please check the example in the project which have following funtions.
 Just call the service from network controller as below:
 
       private fun callService() {
-        var serviceName = baseURL + "login"
+        var serviceName = baseURL /*+ "register"*/
+        val headers = HashMap<String, String>()
+        val queue = VolleyQueue.getInstance(this)
+        queue.headers = headers
+
         val networkController = NetworkController(this)
-        val hashMap = HashMap<String, String>()
-        hashMap["email"] = "username"
-        hashMap["password"] = "password"
+        val params = JSONObject()
+        params.put("Email", "test11@gmail.com")
+        params.put("Password", "123456789")
+        params.put("MobileNumber", "+9230064000000")
+        params.put("FirstName", "Test")
+        params.put("LastName", "Test")
+
         networkController.isFinishActivity = true
-        networkController.callService(NetworkConst.POST, serviceName, hashMap, testAPI,
+        networkController.callService(NetworkConst.POST, serviceName, null, TAG,
                 JSONObject::class.java, object : VolleyResponse {
-            override fun onFailure(message: String) {
-
-            }
-
             override fun onSuccess(response: Any, tag: String) {
-                Log.e("Test", tag)
+                Log.e("onSuccess", tag)
             }
-        })
+
+            override fun onFailure(message: String) {
+                Log.e("onFailure", message)
+            }
+        }, params, true)
     }
     
 If you want to handle logout functionality then add eventbus in your app gradle as dependency and add the following method in your calling activity 
