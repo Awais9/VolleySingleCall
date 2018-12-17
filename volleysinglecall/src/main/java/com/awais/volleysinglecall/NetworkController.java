@@ -5,6 +5,8 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 
 import com.android.volley.NetworkResponse;
@@ -92,53 +94,56 @@ public class NetworkController {
     public <T> void callService(int requestType, String serviceName, final HashMap<String, String> hashMap,
                                 final String tag, final Class<T> objectClass, final VolleyResponse calls,
                                 JSONObject jsonObject, boolean isJsonReq) {
+        if (isNetworkAvailable(context)) {
+            if (isJsonReq) {
+                JsonObjectRequest objectRequest = new JsonObjectRequest(requestType, serviceName,
+                        jsonObject, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        requestSuccess("", response, tag, calls, objectClass);
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        responseFailed(error, tag, calls);
+                    }
+                }) {
+                    @Override
+                    public Map<String, String> getHeaders() {
+                        return volleyQueue.getHeaders();
+                    }
+                };
+                volleyQueue.addToRequestQueue(objectRequest, tag);
+            } else {
+                StringRequest request = new StringRequest(requestType,
+                        serviceName, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        requestSuccess(response, null, tag, calls, objectClass);
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        responseFailed(error, tag, calls);
+                    }
+                }) {
+                    @Override
+                    public Map<String, String> getHeaders() {
+                        return volleyQueue.getHeaders();
+                    }
 
-        if (isJsonReq) {
-            JsonObjectRequest objectRequest = new JsonObjectRequest(requestType, serviceName,
-                    jsonObject, new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    requestSuccess("", response, tag, calls, objectClass);
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    responseFailed(error, tag, calls);
-                }
-            }) {
-                @Override
-                public Map<String, String> getHeaders() {
-                    return volleyQueue.getHeaders();
-                }
-            };
-            volleyQueue.addToRequestQueue(objectRequest, tag);
+                    @Override
+                    protected Map<String, String> getParams() {
+                        if (hashMap != null)
+                            return hashMap;
+                        else
+                            return new HashMap<>();
+                    }
+                };
+                volleyQueue.addToRequestQueue(request, tag);
+            }
         } else {
-            StringRequest request = new StringRequest(requestType,
-                    serviceName, new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    requestSuccess(response, null, tag, calls, objectClass);
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    responseFailed(error, tag, calls);
-                }
-            }) {
-                @Override
-                public Map<String, String> getHeaders() {
-                    return volleyQueue.getHeaders();
-                }
-
-                @Override
-                protected Map<String, String> getParams() {
-                    if (hashMap != null)
-                        return hashMap;
-                    else
-                        return new HashMap<>();
-                }
-            };
-            volleyQueue.addToRequestQueue(request, tag);
+            showSingleDialog("Please check your internet connection", true);
         }
     }
 
@@ -165,11 +170,11 @@ public class NetworkController {
             } else {
                 calls.onFailure(jsonObject.toString());
                 if (isShowDialog())
-                    showSingleDialog(jsonObject.optString("message"));
+                    showSingleDialog(jsonObject.optString("message"), false);
             }
         } catch (Exception e) {
             if (isShowDialog())
-                showSingleDialog(e.getMessage());
+                showSingleDialog(e.getMessage(), false);
             calls.onFailure(e.getMessage());
         }
     }
@@ -195,14 +200,14 @@ public class NetworkController {
             if (currentCount < getLogoutCount()) {
                 currentCount++;
                 if (isShowDialog())
-                    showSingleDialog(error.toString());
+                    showSingleDialog(error.toString(), false);
                 calls.onFailure(error.toString());
             } else {
                 logoutDialog("Do you want to logout?");
             }
         } else {
             if (isShowDialog())
-                showSingleDialog(error.toString());
+                showSingleDialog(error.toString(), false);
             calls.onFailure(error.toString());
         }
         volleyQueue.cancelPendingRequests(tag);
@@ -272,7 +277,7 @@ public class NetworkController {
         });
     }
 
-    private void showSingleDialog(String message) {
+    private void showSingleDialog(String message, final boolean fromNet) {
         if (context != null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
             builder.setCancelable(false);
@@ -282,9 +287,11 @@ public class NetworkController {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     dialogInterface.dismiss();
-                    if (isFinishActivity()) {
-                        Activity activity = (Activity) context;
-                        activity.finish();
+                    if (!fromNet) {
+                        if (isFinishActivity()) {
+                            Activity activity = (Activity) context;
+                            activity.finish();
+                        }
                     }
                 }
             }).show();
@@ -315,5 +322,12 @@ public class NetworkController {
         } else {
             Log.e("NetworkController", "Current context is null or expired.");
         }
+    }
+
+    private boolean isNetworkAvailable(Context context) {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 }
