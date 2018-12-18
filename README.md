@@ -15,7 +15,7 @@ Add the following in your main project gradle file
 And add the following in app gradle file
 
      dependencies {
-             implementation 'com.github.Awais9:VolleySingleCall:v1.4'
+             implementation 'com.github.Awais9:VolleySingleCall:v1.5'
       }
 
 # How to use?
@@ -46,6 +46,9 @@ Just call the service from network controller as below:
         networkController.isFinishActivity = true
         networkController.callService(NetworkConst.POST, serviceName, null, TAG,
                 JSONObject::class.java, object : VolleyResponse {
+            override fun noInternet() {
+                Log.e("Log", "If internet is not connected")
+            }
             override fun onSuccess(response: Any, tag: String) {
                 Log.e("onSuccess", tag)
             }
