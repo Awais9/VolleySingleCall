@@ -50,6 +50,10 @@ public class NetworkController {
         volleyQueue = VolleyQueue.getInstance(context);
     }
 
+    public VolleyQueue getVolleyQueue() {
+        return volleyQueue;
+    }
+
     /***************************************************************/
     private int logoutCount = 2;
     private int currentCount = 0;
