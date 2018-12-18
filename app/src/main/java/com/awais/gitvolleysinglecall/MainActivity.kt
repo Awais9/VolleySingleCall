@@ -41,6 +41,10 @@ class MainActivity : AppCompatActivity() {
         networkController.isFinishActivity = true
         networkController.callService(NetworkConst.POST, serviceName, null, TAG,
                 JSONObject::class.java, object : VolleyResponse {
+            override fun noInternet() {
+                Log.e("Log", "If internet is not connected")
+            }
+
             override fun onSuccess(response: Any, tag: String) {
                 Log.e("onSuccess", tag)
             }

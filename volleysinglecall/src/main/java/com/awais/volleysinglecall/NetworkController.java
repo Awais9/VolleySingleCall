@@ -143,7 +143,10 @@ public class NetworkController {
                 volleyQueue.addToRequestQueue(request, tag);
             }
         } else {
-            showSingleDialog("Please check your internet connection", true);
+            calls.noInternet();
+            if (showDialog) {
+                showSingleDialog("Please check your internet connection", true);
+            }
         }
     }
 
