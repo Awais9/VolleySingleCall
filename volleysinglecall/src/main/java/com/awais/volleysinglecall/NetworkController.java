@@ -25,18 +25,14 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 import org.greenrobot.eventbus.EventBus;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -62,7 +58,7 @@ public class NetworkController {
     private boolean shouldLogout = false;
     private boolean showDialog = true;
     private final int sec = 1000;
-    private int requestTime = 15 * sec;
+    private int requestTimeOut = 15 * sec;
 
     public boolean isFinishActivity() {
         return finishActivity;
@@ -344,28 +340,28 @@ public class NetworkController {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    public int getRequestTime() {
-        return requestTime;
+    public int getRequestTimeOut() {
+        return requestTimeOut;
     }
 
-    public void setRequestTime(int requestTime) {
-        this.requestTime = requestTime * sec;
+    public void setRequestTimeOut(int requestTimeOut) {
+        this.requestTimeOut = requestTimeOut * sec;
     }
 
     private void stringSetTimeOut(StringRequest stringRequest) {
-        stringRequest.setRetryPolicy(new DefaultRetryPolicy(getRequestTime(),
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(getRequestTimeOut(),
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
     }
 
     private void objectSetTimeOut(JsonObjectRequest jsonObjectRequest) {
-        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(getRequestTime(),
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(getRequestTimeOut(),
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
     }
 
     private void imageSetTimeOut(ImageRequest imageRequest) {
-        imageRequest.setRetryPolicy(new DefaultRetryPolicy(getRequestTime(),
+        imageRequest.setRetryPolicy(new DefaultRetryPolicy(getRequestTimeOut(),
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
     }
