@@ -9,6 +9,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Response;
 import com.android.volley.ServerError;
@@ -60,6 +61,8 @@ public class NetworkController {
     private boolean finishActivity = false;
     private boolean shouldLogout = false;
     private boolean showDialog = true;
+    private final int sec = 1000;
+    private int requestTime = 15 * sec;
 
     public boolean isFinishActivity() {
         return finishActivity;
@@ -118,6 +121,7 @@ public class NetworkController {
                     }
                 };
                 volleyQueue.addToRequestQueue(objectRequest, tag);
+                objectSetTimeOut(objectRequest);
             } else {
                 StringRequest request = new StringRequest(requestType,
                         serviceName, new Response.Listener<String>() {
@@ -145,6 +149,7 @@ public class NetworkController {
                     }
                 };
                 volleyQueue.addToRequestQueue(request, tag);
+                stringSetTimeOut(request);
             }
         } else {
             calls.noInternet();
@@ -233,6 +238,7 @@ public class NetworkController {
             }
         });
         volleyQueue.addToRequestQueue(imageRequest, "imageRequest");
+        imageSetTimeOut(imageRequest);
     }
 
     public <T> void uploadImage(String serviceURL, JSONObject params, final String tag, final Class<T> objectClass,
@@ -337,4 +343,31 @@ public class NetworkController {
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
+
+    public int getRequestTime() {
+        return requestTime;
+    }
+
+    public void setRequestTime(int requestTime) {
+        this.requestTime = requestTime * sec;
+    }
+
+    private void stringSetTimeOut(StringRequest stringRequest) {
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(getRequestTime(),
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+    }
+
+    private void objectSetTimeOut(JsonObjectRequest jsonObjectRequest) {
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(getRequestTime(),
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+    }
+
+    private void imageSetTimeOut(ImageRequest imageRequest) {
+        imageRequest.setRetryPolicy(new DefaultRetryPolicy(getRequestTime(),
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+    }
+
 }
